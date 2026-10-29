@@ -13,13 +13,15 @@ Un juego de cacería en realidad aumentada, al estilo Pokémon GO: el animal se 
 5. **Modo Paleo-RA: Rescate en Villa Escolar** — detector de fósiles: gliptodonte, perezoso gigante, toxodonte y yaguareté fósil
 6. **Exploración libre** — cualquier especie puede aparecer, una cacería tras otra
 
-## Cómo se juega
+## Cómo se juega (RA en Android)
 
-1. Elegí la zona: casa (3 m), patio (7 m) o plaza (14 m).
-2. **Escaneá el lugar:** apuntá a muebles, mesas, árboles y rincones. El animal se esconde detrás o debajo de esos objetos reales, y gracias al sensor de profundidad lo real lo tapa en la cámara. Podés marcar un escondite («Esconder acá») o un río o pileta («Hay agua acá»): el tapir se mete al agua y se zambulle.
-3. Seguí las huellas con el radar: aparecen cuando pasás cerca.
+1. Elegí la zona: casa (3 m), patio (7 m) o plaza (14 m), y tocá el piso para armar el **campamento**.
+2. **Escondé al animal:** caminá hasta el escondite real (detrás del sillón, debajo de la mesa, detrás de un árbol), apuntá al piso y tocá **Esconderlo acá**. Si es un río o pileta, marcá «Es agua». Para jugar solo: caminá un poco y tocá **Que lo esconda el juego**.
+3. **Pasale el celular a quien busca.** Las huellas siguen el camino que hizo quien lo escondió, y el animal recién aparece cuando llegás a su escondite. Su llamado se escucha desde ahí.
 4. Analizá las huellas (tamaño, dedos, garras). Sin identificarlo, solo ves su silueta.
-5. Sacale la foto cuando el aro se ponga verde. Tenés 3 rollos; si fallás, se escapa y deja un rastro nuevo.
+5. Sacale la foto cuando el aro se ponga verde. Tenés 3 rollos; si fallás se vuelve a esconder, y con 3 fallas se escapa y hay que esconderlo de nuevo.
+
+En casa, los animales se achican a la mitad para entrar en los escondites.
 
 ## Equipos
 
