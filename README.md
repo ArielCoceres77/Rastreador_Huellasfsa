@@ -2,38 +2,30 @@
 
 Juego de realidad aumentada del proyecto **DIA (Didáctica con IA) · Aprendé jugando**.
 
-Un juego de cacería en realidad aumentada, al estilo Pokémon GO: el animal se esconde de verdad en tu casa, el patio o la plaza, y lo buscás caminando con la cámara. Seguís sus huellas con el radar, lo identificás por la huella y le sacás la foto de campo para sumarlo a tu **Fauna-dex Formoseña**. Vas ganando XP y subiendo de nivel de rastreador.
+Recorré tu casa, el patio, la escuela o la plaza con la cámara del celular. El rastreador **reconoce los objetos reales** (sillones, sillas, mesas, camas, plantas, bancos, bicis, autos, heladeras…) y **detrás de cada uno se asoma un animal de Formosa**, recortado con la silueta del objeto. Si el objeto es chico, el animal es chico; si es grande, puede ser grande; detrás de un auto o un camión aparece megafauna del Pleistoceno. ¿Un árbol o una roca? Tocalo en la pantalla y lo revisa igual.
 
-## Misiones
+Reconocé al animal antes de que se acabe el tiempo:
 
-1. **El Gran Excavador de Formosa Seca** — tatú carreta
-2. **El Sembrador Silencioso** — tapir o mboreví
-3. **El Caminante de los Pastizales** — aguará guazú
-4. **El Depredador Invisible** — yaguareté
-5. **Modo Paleo-RA: Rescate en Villa Escolar** — detector de fósiles: gliptodonte, perezoso gigante, toxodonte y yaguareté fósil
-6. **Exploración libre** — cualquier especie puede aparecer, una cacería tras otra
+- Acierto: **+100**, más bonus por rapidez y por racha.
+- Error: **−50**. Si se acaba el tiempo: **−25**.
+- Oír su sonido: −10. Pista: −20.
 
-## Cómo se juega (RA en Android)
+## Fauna
 
-1. Elegí la zona: casa (3 m), patio (7 m) o plaza (14 m), y tocá el piso para armar el **campamento**.
-2. **Escondé al animal:** caminá hasta el escondite real (detrás del sillón, debajo de la mesa, detrás de un árbol), apuntá al piso y tocá **Esconderlo acá**. Si es un río o pileta, marcá «Es agua». Para jugar solo: caminá un poco y tocá **Que lo esconda el juego**.
-3. **Pasale el celular a quien busca.** Las huellas siguen el camino que hizo quien lo escondió, y el animal recién aparece cuando llegás a su escondite. Su llamado se escucha desde ahí.
-4. Analizá las huellas (tamaño, dedos, garras). Sin identificarlo, solo ves su silueta.
-5. Sacale la foto cuando el aro se ponga verde. Tenés 3 rollos; si fallás se vuelve a esconder, y con 3 fallas se escapa y hay que esconderlo de nuevo.
+Mulita, tatú carreta, zorro de monte, gato onza, mono carayá, carpincho, corzuela parda, pecarí de collar, aguará guazú, puma, yaguareté, oso hormiguero, yacaré overo, jabirú, ñandú y tapir. Megafauna: gliptodonte, perezoso gigante y toxodonte.
 
-En casa, los animales se achican a la mitad para entrar en los escondites.
+Cada animal reconocido queda en la **Fauna-dex Formoseña** con su ficha.
 
-## Equipos
+## Modos
 
-- **RA completa con oclusión** (el animal se esconde detrás de los objetos reales): Android con Chrome, ARCore y soporte de profundidad (ARCore Depth API). Sin profundidad igual detecta objetos y esconde al animal, pero no puede recortarlo detrás de ellos.
-- **Modo cámara con giroscopio:** iPhone y otros equipos. Safari no da acceso a la geometría del lugar, así que el animal se esconde detrás de objetos virtuales.
-- **Modo sin cámara:** computadora o proyector del aula.
+- **Con la cámara:** Android, iPhone o la compu con cámara. La página tiene que abrirse con https (GitHub Pages).
+- **Monte virtual:** sin cámara, para probar o para el proyector del aula.
 
-La cámara solo funciona si la página se abre con https (por ejemplo, desde GitHub Pages).
+## Técnica
 
-Todo está en un solo archivo, `index.html`, con el motor 3D incluido: funciona sin conexión.
+- Detector de objetos y recorte por toque con MediaPipe (carpeta `mp/`). Los modelos se descargan de Google la primera vez, así que hace falta internet; después quedan en la caché del navegador.
+- Animales en 3D con three.js, incluido en `index.html`.
 
 ---
 
-Proyecto DIA · ISFD y T «República Federal de Alemania», El Colorado, Formosa.
-Copyleft: copialo, compartilo y mejoralo.
+Proyecto DIA · ISFD y T «República Federal de Alemania», El Colorado, Formosa. Copyleft: copialo, compartilo y mejoralo.
