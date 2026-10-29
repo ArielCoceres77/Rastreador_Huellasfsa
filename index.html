@@ -191,6 +191,15 @@ ol.pasosj{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
 #rollos{display:flex;gap:4px}
 #rollos i{width:12px;height:12px;border-radius:50%;background:var(--ambar)}
 #rollos i.off{background:rgba(255,255,255,.15)}
+#escaneo{position:absolute;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(560px,calc(100% - 24px));background:var(--vidrio);border:1px solid var(--borde);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#escaneo h3{font-size:17px;color:var(--papel)}
+#escaneo p{margin:0;font-size:14px;line-height:1.45;color:var(--tinta)}
+#escaneo .estado{font-family:var(--f-mono);font-size:12px;color:var(--tinta-2)}
+#escaneo .estado b{color:var(--ok)}
+#escaneo .estado b.no{color:var(--ambar)}
+.prog{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--celeste),var(--ok));transition:width .3s}
+.btn-ajustes{background:var(--vidrio);border:1px solid var(--borde);border-radius:12px;padding:10px 12px;font-weight:700;flex:none}
+.topder{display:flex;gap:8px;flex:none}
 @media (max-width:520px){#radar{width:112px;height:112px}#joy{width:96px;height:96px}}
 </style>
 </head>
@@ -227,11 +236,18 @@ ol.pasosj{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
     <div id="hud" hidden>
       <div class="top">
         <div class="chip"><div class="t1" id="hNivel">Nivel 1</div><div class="t2" id="hTitulo">—</div><div class="pasos" id="hPasos"></div></div>
-        <button class="btn-salir" id="bSalir">Salir</button>
+        <div class="topder"><button class="btn-ajustes" id="bAjustes" hidden>Ajustes</button><button class="btn-salir" id="bSalir">Salir</button></div>
       </div>
       <div id="tip"><svg class="tatu" id="tatuBtn" viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="58" rx="22" ry="4" fill="rgba(0,0,0,.3)"/><path d="M8 44c0-14 11-24 24-24s24 10 24 24z" fill="#8a6d52"/><g stroke="#5c4433" stroke-width="2.4"><path d="M20 23v21M28 20v24M36 20v24M44 23v21"/></g><circle cx="12" cy="42" r="7" fill="#b08a68"/><circle cx="10" cy="40" r="1.8" fill="#0E2A47"/><rect x="40" y="10" width="16" height="10" rx="3" fill="#38BDF8"/><path d="M48 20v4" stroke="#38BDF8" stroke-width="2"/><circle cx="44" cy="15" r="1.6" fill="#0E2A47"/><circle cx="52" cy="15" r="1.6" fill="#0E2A47"/></svg><div class="burbuja" id="tipTxt">…</div></div>
       <div id="radarBox"><canvas id="radar" width="264" height="264" aria-label="Radar de rastreo"></canvas><div id="senal"><span id="senalTxt">Lejos</span><span class="hs" id="senalHs"></span></div></div>
       <div id="joy" hidden><i></i><span>Caminar</span></div>
+      <div id="escaneo" hidden>
+        <h3>Escaneando el lugar</h3>
+        <p>Mové el celu despacio y apuntá a los muebles, las mesas, los árboles y los rincones. El animal se va a esconder detrás o debajo de lo que encuentre. Si hay agua (río, riacho o pileta), apuntala y tocá <b>Hay agua acá</b>.</p>
+        <div class="prog"><i id="escProg"></i></div>
+        <div class="estado" id="escEstado">—</div>
+        <div class="acciones"><button class="btn" id="bMarcar">Esconder acá</button><button class="btn" id="bAgua">Hay agua acá</button><button class="btn pri" id="bListo" disabled>¡Listo, a buscar!</button></div>
+      </div>
       <div class="abajo">
         <div id="lectura" hidden>—</div>
         <div class="barra" id="barra"></div>
@@ -254,6 +270,15 @@ ol.pasosj{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
         <button class="modo" id="mCam"><b>Modo cámara</b><span>La cámara de fondo, mirás girando el celular y caminás con el joystick. Sirve en iPhone.</span></button>
         <button class="modo" id="mVirtual"><b>Sin cámara</b><span>Un monte virtual de Formosa. Para la compu o el proyector: joystick, flechas o W A S D, y arrastrar para mirar.</span></button>
       </div>
+    </div>
+
+    <div class="panel" id="pAjustes" hidden>
+      <div class="cab"><div><div class="eyebrow">Realidad aumentada</div><h2>Ajustes de integración</h2></div><button class="cerrar" data-cerrar>Cerrar</button></div>
+      <p class="sec" id="ajEstado">—</p>
+      <div class="preg"><div class="q">Oclusión (que lo real tape al animal)</div>
+        <div class="zonas"><button class="tog on" data-ocl="normal">Normal</button><button class="tog" data-ocl="inv">Invertida</button><button class="tog" data-ocl="off">Apagada</button></div>
+        <p class="sec">Si el animal se corta en lugares raros, activá «Ver profundidad»: los objetos cercanos tienen que verse naranjas y los lejanos azules, alineados con la imagen. Si el mapa aparece dado vuelta, elegí «Invertida».</p></div>
+      <div class="toggles"><button class="tog" id="tDbg">Ver profundidad</button><button class="tog on" id="tPts">Ver puntos detectados</button></div>
     </div>
 
     <div class="panel" id="pLupa" hidden>
@@ -296,7 +321,8 @@ ol.pasosj{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;
     <div class="panel" id="pComo" hidden>
       <div class="cab"><div><div class="eyebrow">Guía rápida</div><h2>Cómo se juega</h2></div><button class="cerrar" data-cerrar>Cerrar</button></div>
       <ol class="pasosj">
-        <li><b>Elegí la zona</b> (casa, patio o plaza) y, en RA, tocá el suelo para armar tu campamento. El animal se esconde en algún lugar a tu alrededor.</li>
+        <li><b>Elegí la zona</b> (casa, patio o plaza) y, en RA, tocá el suelo para armar tu campamento.</li>
+        <li><b>Escaneá el lugar:</b> apuntá a muebles, mesas, árboles y rincones. El animal se esconde detrás o debajo de esos objetos reales, y ellos lo tapan en la cámara. Podés marcar vos un escondite con <b>Esconder acá</b> o un río o pileta con <b>Hay agua acá</b>.</li>
         <li><b>Mirá el radar.</b> Muestra las huellas que encontraste y una flecha hacia la siguiente. Abajo, las huellitas indican la distancia: 3 es lejos, 2 cerca y 1 muy cerca. Escuchá: su llamado suena más fuerte cuando te acercás.</li>
         <li><b>Caminá siguiendo el rastro.</b> Las huellas aparecen cuando pasás cerca. Tocá una para mirarla con la <b>lupa</b> o usá el <b>visor térmico</b>, que muestra en rojo y amarillo las huellas frescas.</li>
         <li><b>Analizá las huellas</b>: tamaño, dedos, garras y especie. Si no lo identificaste, solo vas a ver su silueta.</li>
@@ -575,7 +601,7 @@ function vaina(){const v=el(.012,.008,.09,M(0x8a6a2e,.7),8);v.position.y=.01;v.r
 /* =================== ESTADO =================== */
 const S={mode:null,mis:null,sp:null,R:7,phase:'menu',prints:[],identified:false,errs:0,rolls:3,rollsUsed:0,animal:null,home:new V3(),visible:false,
   fence:null,fenceDown:true,P:new V3(0,0,-1),fwd:new V3(0,0,1),yaw:Math.PI,pitch:-.5,gyro:false,joy:{x:0,y:0},keys:{},sel:null,thermal:false,
-  dig:null,fossils:[],rel:null,snap:false,scale:1,anim:[],placed:false,xrHold:false,encontrado:false,fotoUrl:null,tLlamado:3,tBip:0,special:null,huida:null,libreN:0};
+  dig:null,fossils:[],rel:null,snap:false,scale:1,anim:[],placed:false,xrHold:false,encontrado:false,fotoUrl:null,tLlamado:3,tBip:0,special:null,huida:null,libreN:0,grid:new Map(),obst:[],props:null,agua:null,esc:null,usados:[],depthOK:false,oclModo:'normal',dep:null,nPts:0,ptsN:0,visto:false,tPeek:4,peek:null,manual:[],hitFan:[],centro:null,tRoom:0};
 const ANIMS=S.anim;
 function tween(dur,fn,done){ANIMS.push({t:0,dur,fn,done});}
 let guardado={};try{guardado=JSON.parse(localStorage.getItem('rhf-cuaderno')||'{}')||{};}catch(e){guardado={};}
@@ -603,6 +629,7 @@ function generarSonidos(){
   BUF.caraya=sbuf(3,(d,sr,n)=>{let ph=0,lp=0;for(let i=0;i<n;i++){const t=i/sr;const e=Math.pow(Math.sin(Math.PI*t/3),1.5)*(.6+.4*Math.sin(t*9));const f=150+30*Math.sin(t*2.1);ph+=f/sr;lp+=((ph%1)*2-1-lp)*.05;d[i]=lp*e+(Math.random()*2-1)*.05*e;}});
   BUF.pajaro=sbuf(.6,(d,sr,n)=>{let ph=0;for(let i=0;i<n;i++){const t=i/sr;const u=t%.15;const f=3200+Math.sin(u/.15*Math.PI)*1400;ph+=f/sr;d[i]=Math.sin(TAU*ph)*(u<.1?Math.sin(Math.PI*u/.1):0)*(t<.45?1:0);}});
   BUF.obturador=sbuf(.35,(d,sr,n)=>{for(let i=0;i<n;i++){const t=i/sr;d[i]=(Math.random()*2-1)*(Math.exp(-t*60)+(t>.12?Math.exp(-(t-.12)*50)*.7:0));}});
+  BUF.plaf=sbuf(1.2,(d,sr,n)=>{let lp=0;for(let i=0;i<n;i++){const t=i/sr;lp+=(Math.random()*2-1-lp)*(.25-t*.15);d[i]=lp*Math.exp(-t*4)+Math.sin(TAU*(180-t*90)*t)*Math.exp(-t*9)*.6;}});
   BUF.bip=sbuf(.12,(d,sr,n)=>{for(let i=0;i<n;i++){const t=i/sr;d[i]=Math.sin(TAU*1500*t)*Math.sin(Math.PI*t/.12);}});
   BUF.surge=sbuf(2,(d,sr,n)=>{let lp=0;for(let i=0;i<n;i++){const t=i/sr;lp+=(Math.random()*2-1-lp)*.03;d[i]=lp*Math.sin(Math.PI*t/2)+Math.sin(TAU*(60+t*20)*t)*.3*Math.sin(Math.PI*t/2);}});
 }
@@ -676,20 +703,23 @@ let camStream=null,xrSession=null,hitSrc=null,lightProbe=null;
 async function iniciar(modo){
   audioInit();cerrarPaneles();S.mode=modo;texturasOnce();
   if(modo==='xr'){
-    try{xrSession=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['hit-test'],optionalFeatures:['dom-overlay','light-estimation','local-floor'],domOverlay:{root:$('#overlay')}});}
+    try{xrSession=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['hit-test'],optionalFeatures:['dom-overlay','light-estimation','local-floor','depth-sensing'],domOverlay:{root:$('#overlay')},depthSensing:{usagePreference:['cpu-optimized'],dataFormatPreference:['luminance-alpha','float32']}});}
     catch(e){toast('No se pudo abrir la RA: '+e.message);return iniciar('cam');}
     renderer.xr.setReferenceSpaceType('local');await renderer.xr.setSession(xrSession);
     const vs=await xrSession.requestReferenceSpace('viewer');hitSrc=await xrSession.requestHitTestSource({space:vs});
+    try{S.depthOK=xrSession.depthUsage==='cpu-optimized';}catch(e){S.depthOK=false;}
+    S.hitFan=[];for(const yw of [-.5,-.25,0,.25,.5])for(const pt of [-.6,-.35,-.12]){const dir={x:Math.sin(yw)*Math.cos(pt),y:Math.sin(pt),z:-Math.cos(yw)*Math.cos(pt),w:0};
+      try{S.hitFan.push(await xrSession.requestHitTestSource({space:vs,offsetRay:new XRRay({x:0,y:0,z:0,w:1},dir),entityTypes:['plane','point']}));}catch(e){try{S.hitFan.push(await xrSession.requestHitTestSource({space:vs,offsetRay:new XRRay({x:0,y:0,z:0,w:1},dir)}));}catch(e2){}}}
     try{if(xrSession.requestLightProbe)lightProbe=await xrSession.requestLightProbe();}catch(e){lightProbe=null;}
     xrSession.addEventListener('select',onXRSelect);xrSession.addEventListener('selectstart',()=>{S.xrHold=true;});xrSession.addEventListener('selectend',()=>{S.xrHold=false;});
-    xrSession.addEventListener('end',()=>{xrSession=null;hitSrc=null;lightProbe=null;reticle.visible=false;if(S.phase!=='menu')salir(true);});
+    xrSession.addEventListener('end',()=>{xrSession=null;hitSrc=null;lightProbe=null;reticle.visible=false;S.hitFan=[];S.depthOK=false;OCL.on.value=0;dbgQuad.visible=false;if(S.phase!=='menu')salir(true);});
     scene.background=null;
   }else if(modo==='cam'){
     try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});const v=$('#cam');v.srcObject=camStream;v.hidden=false;await v.play().catch(()=>{});scene.background=null;}
     catch(e){toast('No hay cámara disponible. Seguís en modo sin cámara.');S.mode='virtual';}
   }
   world.position.set(0,0,0);world.rotation.set(0,0,0);world.scale.setScalar(1);
-  $('#menu').hidden=true;$('#hud').hidden=false;$('#joy').hidden=S.mode==='xr';
+  $('#menu').hidden=true;$('#hud').hidden=false;$('#joy').hidden=S.mode==='xr';$('#bAjustes').hidden=S.mode!=='xr';
   $('#hNivel').textContent=S.mis.nivel;$('#hTitulo').textContent=S.mis.titulo;
   limpiar();armarEntorno();
   if(S.mode==='xr'){S.phase='scan';S.placed=false;content.visible=false;env.visible=false;$('#cross').hidden=true;$('#radarBox').hidden=true;
@@ -700,11 +730,12 @@ function salir(desdeXR){
   if(xrSession&&!desdeXR){xrSession.end().catch(()=>{});}
   if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
   $('#cam').hidden=true;S.phase='menu';limpiar();cerrarPaneles();$('#captura').hidden=true;
-  $('#hud').hidden=true;$('#cross').hidden=true;$('#menu').hidden=false;scene.background=null;scene.fog=null;pintarMenu();
+  $('#hud').hidden=true;$('#cross').hidden=true;$('#escaneo').hidden=true;$('#menu').hidden=false;scene.background=null;scene.fog=null;pintarMenu();
 }
 function limpiar(){
   [content,env].forEach(g=>{while(g.children.length)g.remove(g.children[0]);});
-  Object.assign(S,{prints:[],identified:false,errs:0,rolls:3,rollsUsed:0,animal:null,visible:false,fence:null,fenceDown:true,sel:null,thermal:false,dig:null,fossils:[],rel:null,snap:false,encontrado:false,fotoUrl:null,tLlamado:3,special:null,huida:null,_vioRet:0});
+  Object.assign(S,{prints:[],identified:false,errs:0,rolls:3,rollsUsed:0,animal:null,visible:false,fence:null,fenceDown:true,sel:null,thermal:false,dig:null,fossils:[],rel:null,snap:false,encontrado:false,fotoUrl:null,tLlamado:3,special:null,huida:null,_vioRet:0,grid:new Map(),obst:[],props:null,agua:null,aguaMesh:null,esc:null,usados:[],visto:false,tPeek:4,peek:null,manual:[],nPts:0,ptsN:0,centro:null,tRoom:0});
+  ptsGeo.setDrawRange(0,0);ptsObj.visible=true;
   ANIMS.length=0;lectura(null);$('#captura').hidden=true;
 }
 let texOK=false;function texturasOnce(){if(!texOK){texturas();texOK=true;}}
@@ -719,9 +750,9 @@ function armarEntorno(){
     const suelo=new THREE.Mesh(new THREE.CircleGeometry(80,48),new THREE.MeshStandardMaterial({map:canvasTex(512,512,(x,w,h)=>mudFill(x,w,h,'#'+new THREE.Color(E.pasto).getHexString())),roughness:1}));suelo.material.map.wrapS=suelo.material.map.wrapT=THREE.RepeatWrapping;suelo.material.map.repeat.set(30,30);suelo.rotation.x=-Math.PI/2;suelo.receiveShadow=true;env.add(suelo);
     for(let i=0;i<90;i++){const a=rnd(0,TAU),r=rnd(S.R+3,S.R+30);env.add(planta(eco,true,r,a));}
   }else scene.fog=null;
-  // vegetación cercana (también sobre la cámara)
-  const n=S.R<5?5:S.mode==='xr'?10:22;
-  for(let i=0;i<n;i++){const a=rnd(0,TAU),r=rnd(S.R*.5,S.R*1.2);env.add(planta(eco,S.R>=5,r,a));}
+  // en RA, el lugar real es el escenario. En los otros modos hay escondites virtuales.
+  S.props=new THREE.Group();env.add(S.props);
+  if(S.mode!=='xr'){S.grid=new Map();S.obst=[];S.agua=null;propsVirtuales(eco);}
 }
 function planta(eco,grande,r,a){let o;
   if(!grande)o=pasto(rnd(.3,.55));
@@ -731,7 +762,178 @@ function planta(eco,grande,r,a){let o;
   else o=Math.random()<.75?arbol(rnd(2.2,4)):pasto(rnd(.4,.7));
   o.position.set(Math.cos(a)*r,0,Math.sin(a)*r);o.rotation.y=rnd(0,TAU);return o;}
 
+/* =================== INTEGRACIÓN CON EL LUGAR REAL =================== */
+/* 1) Oclusión: el sensor de profundidad (WebXR Depth API) hace que lo real tape a lo virtual.
+   2) Escaneo: con la profundidad y con rayos de detección de superficies se arma un mapa del lugar
+      (muebles, mesas, troncos, paredes) y el animal se esconde detrás o debajo de esos objetos. */
+const OCL={tex:{value:null},uv:{value:new THREE.Matrix4()},raw:{value:.001},vp:{value:new THREE.Vector2(1,1)},on:{value:0},flt:{value:0},flip:{value:1}};
+const OCL_V='varying float vOclZ;\n';
+const OCL_F='uniform sampler2D oclTex;uniform mat4 oclUv;uniform float oclRaw;uniform float oclOn;uniform float oclFlt;uniform float oclFlip;uniform vec2 oclVp;varying float vOclZ;\n'+
+ 'float oclDepth(vec2 uv){vec4 t=texture2D(oclTex,uv);return oclFlt>.5?t.r*oclRaw:dot(t.ra,vec2(255.,65280.))*oclRaw;}\n'+
+ 'void oclTest(){if(oclOn<.5)return;vec2 s=gl_FragCoord.xy/oclVp;if(oclFlip>.5)s.y=1.-s.y;vec2 uv=(oclUv*vec4(s,0.,1.)).xy;if(uv.x<0.||uv.y<0.||uv.x>1.||uv.y>1.)return;float d=oclDepth(uv);if(d>.05&&d<vOclZ-.035)discard;}\n';
+function patchOcl(m){if(!m||m.userData.ocl||m.isSpriteMaterial||m.isLineBasicMaterial||m.isPointsMaterial||m.isShaderMaterial)return;m.userData.ocl=1;
+  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{oclTex:OCL.tex,oclUv:OCL.uv,oclRaw:OCL.raw,oclVp:OCL.vp,oclOn:OCL.on,oclFlt:OCL.flt,oclFlip:OCL.flip});
+    sh.vertexShader=OCL_V+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n vOclZ=-mvPosition.z;');
+    sh.fragmentShader=OCL_F+sh.fragmentShader.replace('void main() {','void main() {\n oclTest();');};
+  m.customProgramCacheKey=()=>'ocl1';m.needsUpdate=true;}
+function patchTodo(){world.traverse(o=>{if(o.isMesh){if(Array.isArray(o.material))o.material.forEach(patchOcl);else patchOcl(o.material);}});}
+// capa de diagnóstico: muestra el mapa de profundidad
+const dbgQuad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({uniforms:{oclTex:OCL.tex,oclUv:OCL.uv,oclRaw:OCL.raw,oclVp:OCL.vp,oclFlt:OCL.flt,oclFlip:OCL.flip},
+  vertexShader:'void main(){gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader:'uniform sampler2D oclTex;uniform mat4 oclUv;uniform float oclRaw;uniform float oclFlt;uniform float oclFlip;uniform vec2 oclVp;float oclDepth(vec2 uv){vec4 t=texture2D(oclTex,uv);return oclFlt>.5?t.r*oclRaw:dot(t.ra,vec2(255.,65280.))*oclRaw;}void main(){vec2 s=gl_FragCoord.xy/oclVp;if(oclFlip>.5)s.y=1.-s.y;vec2 uv=(oclUv*vec4(s,0.,1.)).xy;float d=oclDepth(uv);float k=clamp(d/4.,0.,1.);gl_FragColor=vec4(mix(vec3(1.,.25,.1),vec3(.1,.45,1.),k),.5);}',
+  transparent:true,depthTest:false,depthWrite:false}));
+dbgQuad.frustumCulled=false;dbgQuad.renderOrder=999;dbgQuad.visible=false;scene.add(dbgQuad);
+
+let depthTex=null,depthBuf=null;
+function actualizarProfundidad(frame,ref){
+  const pose=frame.getViewerPose(ref);if(!pose)return;const view=pose.views[0];let di=null;
+  try{di=frame.getDepthInformation(view);}catch(e){di=null;}
+  if(!di){OCL.on.value=0;S.dep=null;return;}
+  const w=di.width,h=di.height,flt=xrSession&&xrSession.depthDataFormat==='float32';
+  if(!depthTex||depthTex.image.width!==w||depthTex.image.height!==h){depthBuf=flt?new Float32Array(w*h):new Uint8Array(w*h*2);
+    depthTex=new THREE.DataTexture(depthBuf,w,h,flt?THREE.RedFormat:THREE.LuminanceAlphaFormat,flt?THREE.FloatType:THREE.UnsignedByteType);depthTex.magFilter=depthTex.minFilter=THREE.NearestFilter;depthTex.generateMipmaps=false;OCL.tex.value=depthTex;}
+  depthBuf.set(flt?new Float32Array(di.data):new Uint8Array(di.data));depthTex.needsUpdate=true;
+  OCL.uv.value.fromArray(di.normDepthBufferFromNormView.matrix);OCL.raw.value=di.rawValueToMeters;OCL.flt.value=flt?1:0;
+  const bl=xrSession.renderState.baseLayer;if(bl)OCL.vp.value.set(bl.framebufferWidth,bl.framebufferHeight);
+  OCL.on.value=S.oclModo==='off'?0:1;OCL.flip.value=S.oclModo==='inv'?0:1;
+  S.dep={w,h,flt,raw:di.rawValueToMeters,M:OCL.uv.value.clone(),P:Array.from(view.projectionMatrix),V:new THREE.Matrix4().fromArray(view.transform.matrix),Vi:new THREE.Matrix4().fromArray(view.transform.inverse.matrix)};
+}
+const _v4=new THREE.Vector4();
+function depthNV(nx,ny){const D=S.dep;if(!D)return 0;_v4.set(nx,ny,0,1).applyMatrix4(D.M);const u=_v4.x,v=_v4.y;if(u<0||v<0||u>1||v>1)return 0;
+  const i=Math.min(D.w-1,Math.floor(u*D.w)),j=Math.min(D.h-1,Math.floor(v*D.h)),k=j*D.w+i;return D.flt?depthBuf[k]*D.raw:(depthBuf[k*2]+depthBuf[k*2+1]*256)*D.raw;}
+// ¿un punto (coordenadas del juego) se ve, o lo tapa algo real?
+function puntoVisibleReal(pl){const D=S.dep;if(!D)return true;const w=world.localToWorld(pl.clone());const vp=w.applyMatrix4(D.Vi);const dz=-vp.z;if(dz<=.05)return false;const P=D.P;
+  const cx=P[0]*vp.x+P[8]*vp.z,cy=P[5]*vp.y+P[9]*vp.z;const nx=(cx/dz+1)/2,ndy=cy/dz;const ny=S.oclModo==='inv'?(ndy+1)/2:(1-ndy)/2;if(nx<0||nx>1||ny<0||ny>1)return false;
+  const real=depthNV(nx,ny);return !(real>.05&&real<dz-.08);}
+
+/* ----- mapa del lugar ----- */
+const CELL=.15;const ckey=(i,j)=>i+','+j;
+const ptsMax=4000,ptsGeo=new THREE.BufferGeometry();ptsGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(ptsMax*3),3));ptsGeo.setDrawRange(0,0);
+const ptsObj=new THREE.Points(ptsGeo,new THREE.PointsMaterial({color:0x38BDF8,size:.03,transparent:true,opacity:.85}));ptsObj.frustumCulled=false;world.add(ptsObj);
+function addPunto(p,tipo){if(Math.hypot(p.x-S.P.x,p.z-S.P.z)>S.R*1.6+2.5)return;const i=Math.floor(p.x/CELL),j=Math.floor(p.z/CELL),k=ckey(i,j);let c=S.grid.get(k);
+  if(!c){c={i,j,n:0,hMax:0,hMin:9,floor:0,top:0};S.grid.set(k,c);}
+  if(p.y<.12){c.floor++;return;}if(p.y>2.8)return;c.n++;c.hMax=Math.max(c.hMax,p.y);c.hMin=Math.min(c.hMin,p.y);if(tipo==='up'&&p.y>.35)c.top++;
+  S.nPts++;if(S.nPts%2===0&&S.ptsN<ptsMax){const a=ptsGeo.attributes.position;a.setXYZ(S.ptsN++,p.x,p.y,p.z);a.needsUpdate=true;ptsGeo.setDrawRange(0,S.ptsN);}}
+const ocupada=(i,j)=>{const c=S.grid.get(ckey(i,j));return !!(c&&c.n>=2&&c.hMax>.2);};
+function escanear(frame,ref){
+  S.hitFan.forEach(src=>{let r;try{r=frame.getHitTestResults(src);}catch(e){return;}if(!r.length)return;const pose=r[0].getPose(ref);if(!pose)return;const t=pose.transform;
+    const lp=world.worldToLocal(new V3(t.position.x,t.position.y,t.position.z));const q=new THREE.Quaternion(t.orientation.x,t.orientation.y,t.orientation.z,t.orientation.w);const up=new V3(0,1,0).applyQuaternion(q);addPunto(lp,up.y>.8?'up':'lado');});
+  const D=S.dep;if(!D)return;const P=D.P;
+  for(let gy=0;gy<12;gy++)for(let gx=0;gx<16;gx++){const nx=(gx+.5)/16,ny=(gy+.5)/12;const d=depthNV(nx,ny);if(!(d>.25&&d<6.5))continue;
+    const ndx=nx*2-1,ndy=S.oclModo==='inv'?ny*2-1:1-ny*2;const x=(ndx+P[8])*d/P[0],y=(ndy+P[9])*d/P[5];const w=new V3(x,y,-d).applyMatrix4(D.V);addPunto(world.worldToLocal(w),'d');}
+}
+function clusters(){
+  const occ=[...S.grid.values()].filter(c=>c.n>=2&&c.hMax>.2);const set=new Map(occ.map(c=>[ckey(c.i,c.j),c]));const seen=new Set();const out=[];
+  for(const c of occ){const k=ckey(c.i,c.j);if(seen.has(k))continue;const q=[c];seen.add(k);const cells=[];
+    while(q.length){const a=q.pop();cells.push(a);for(let di=-1;di<=1;di++)for(let dj=-1;dj<=1;dj++){const kk=ckey(a.i+di,a.j+dj);if(!seen.has(kk)&&set.has(kk)){seen.add(kk);q.push(set.get(kk));}}}
+    if(cells.length<2)continue;let cx=0,cz=0;cells.forEach(a=>{cx+=(a.i+.5)*CELL;cz+=(a.j+.5)*CELL;});cx/=cells.length;cz/=cells.length;
+    let r=0;cells.forEach(a=>r=Math.max(r,Math.hypot((a.i+.5)*CELL-cx,(a.j+.5)*CELL-cz)));
+    const hs=cells.map(a=>a.hMax).sort((x,y)=>x-y),h=hs[Math.floor(hs.length*.8)];const alto=cells.filter(a=>a.hMin>.42).length/cells.length;const ext=r*2;
+    const tipo=(ext>3.4||(h>1.9&&ext>2.2))?'pared':(alto>.5&&h>.5&&h<1.2)?'mesa':(h>1.5&&ext<1.2)?'tronco':h<.6?'bajo':'mueble';
+    out.push({c:new V3(cx,0,cz),r:r+CELL/2,h,hMin:Math.min(...cells.map(a=>a.hMin)),tipo,n:cells.length});}
+  return out;}
+function describirLugar(cs){const n={mueble:0,mesa:0,tronco:0,bajo:0,pared:0};cs.forEach(o=>n[o.tipo]++);const p=[];
+  if(n.mueble)p.push(n.mueble+(n.mueble>1?' muebles u objetos grandes':' mueble u objeto grande'));if(n.mesa)p.push(n.mesa+(n.mesa>1?' mesas':' mesa'));if(n.tronco)p.push(n.tronco+(n.tronco>1?' troncos o columnas':' tronco o columna'));if(n.bajo)p.push(n.bajo+(n.bajo>1?' objetos bajos':' objeto bajo'));if(n.pared)p.push(n.pared+(n.pared>1?' paredes':' pared'));
+  return p.length?p.join(', '):'todavía nada';}
+
+/* ----- escondites ----- */
+const ALTO={tatu:.45,tapir:1.05,aguara:1.05,yagua:.85};
+function nombreObst(o){if(o.nombre)return 'detrás de '+o.nombre;const casa=S.R<5;
+  if(o.tipo==='tronco')return casa?'detrás de esa columna o planta':'detrás de ese árbol';
+  if(o.tipo==='mesa')return 'detrás de esa mesa';if(o.tipo==='bajo')return 'agachado detrás de eso';return casa?'detrás de ese mueble':S.R<10?'detrás de eso':'detrás de esa mata';}
+function escondites(sp){const ah=ALTO[sp];const out=[];
+  for(const o of S.obst){if(o.tipo==='pared')continue;const d=Math.hypot(o.c.x-S.P.x,o.c.z-S.P.z);if(d<1.2||d>S.R*1.45+1)continue;
+    if(o.tipo==='mesa'&&o.hMin>=ah*.85)out.push({pos:o.c.clone(),tipo:'debajo',o,txt:'debajo de la mesa',score:2.5});
+    if(o.h>=ah*.5){const dir=o.c.clone().sub(S.P).setY(0).normalize();const pos=o.c.clone().addScaledVector(dir,o.r+.25+ah*.2);
+      if(!ocupada(Math.floor(pos.x/CELL),Math.floor(pos.z/CELL)))out.push({pos,tipo:'detras',o,dir,txt:nombreObst(o),score:1+Math.min(1,o.h/ah)});}}
+  S.manual.forEach(m=>out.push(Object.assign({score:3.5},m)));
+  return out;}
+function elegirEscondite(){
+  let c=escondites(S.sp).filter(e=>!S.usados.some(u=>u.distanceTo(e.pos)<.6));
+  if(S.agua&&S.sp==='tapir'){const ag={pos:S.agua.clone(),tipo:'agua',txt:'metido en el agua',score:4};if(Math.random()<.7)return ag;c.push(ag);}
+  c.forEach(e=>{if(e.o&&e.o.r)e.score+=Math.min(1,e.o.r*2/(ALTO[S.sp]*1.8));});
+  if(!c.length){S.usados=[];c=escondites(S.sp);}
+  if(!c.length)return esconditeVirtual();
+  c.sort((a,b)=>b.score-a.score);const e=c[Math.floor(Math.random()*Math.min(3,c.length))];S.usados.push(e.pos.clone());return e;}
+function esconditeVirtual(){
+  const a=Math.atan2(S.fwd.x,S.fwd.z)+rnd(-1.2,1.2),d=S.R*rnd(.6,.95);const pos=new V3(S.P.x+Math.sin(a)*d,0,S.P.z+Math.cos(a)*d);
+  const dir=pos.clone().sub(S.P).setY(0).normalize();const c=pos.clone().addScaledVector(dir,-.75);const o=crearProp('mata',c);
+  return{pos,tipo:'detras',o,dir,txt:'detrás de esa mata',score:1};}
+
+/* ----- objetos para esconderse en los modos sin RA ----- */
+function crearProp(tipo,pos){const g=new THREE.Group();let r=.5,h=1,nombre='esa mata';
+  if(tipo==='arbol'){const t=arbol(rnd(2.6,4));g.add(t);r=.55;h=2.4;nombre='ese árbol';const tr=cyl(.2,.26,1.6,mTronco,8);tr.position.y=.8;g.add(tr);}
+  else if(tipo==='mata'){for(let i=0;i<6;i++){const b=new THREE.Mesh(new THREE.IcosahedronGeometry(rnd(.35,.5),1),mVerde[i%3]);b.position.set(rnd(-.35,.35),rnd(.3,.75),rnd(-.35,.35));b.castShadow=true;g.add(b);}r=.7;h=1.1;}
+  else if(tipo==='roca'){const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.55,0),M(0x8b7b6a,.95));b.scale.set(1.2,.85,1);b.position.y=.4;b.castShadow=true;g.add(b);r=.65;h=.85;nombre='esa roca';}
+  else if(tipo==='tronco'){const b=cyl(.3,.34,2,mTronco,10);b.rotation.z=Math.PI/2;b.rotation.y=rnd(0,TAU);b.position.y=.32;g.add(b);r=1;h=.62;nombre='ese tronco caído';}
+  else if(tipo==='palma'){g.add(palma(rnd(3,4.5)));const m=new THREE.Group();for(let i=0;i<5;i++){const b=pasto(rnd(.8,1.1));b.position.set(rnd(-.4,.4),0,rnd(-.4,.4));m.add(b);}g.add(m);r=.6;h=1;nombre='ese pastizal y la palmera';}
+  else if(tipo==='cactus'){g.add(cactus(rnd(1.4,2)));const b=new THREE.Mesh(new THREE.IcosahedronGeometry(.45,1),mVerde[2]);b.position.y=.35;g.add(b);r=.55;h=1.2;nombre='ese cardón';}
+  g.position.copy(pos).setY(0);g.rotation.y=rnd(0,TAU);g.traverse(o=>{if(o.isMesh)o.castShadow=true;});S.props.add(g);
+  const o={c:pos.clone().setY(0),r,h,hMin:0,tipo:'virtual',nombre,mesh:g};S.obst.push(o);
+  const n=Math.ceil(r/CELL);const ci=Math.floor(pos.x/CELL),cj=Math.floor(pos.z/CELL);for(let a=-n;a<=n;a++)for(let b=-n;b<=n;b++)if(Math.hypot(a,b)*CELL<=r)S.grid.set(ckey(ci+a,cj+b),{i:ci+a,j:cj+b,n:5,hMax:h,hMin:0,floor:0,top:0});
+  return o;}
+function propsVirtuales(eco){
+  const tipos={seco:['arbol','mata','cactus','roca'],galeria:['arbol','mata','tronco','arbol'],sabana:['palma','mata','palma','arbol'],monte:['arbol','mata','tronco','arbol'],barranca:['roca','mata','tronco','roca']}[eco]||['arbol','mata','roca'];
+  const K=S.R<5?6:S.R<10?10:15;const pos=[];
+  for(let k=0;k<K*4&&pos.length<K;k++){const a=rnd(0,TAU),d=rnd(1.8,S.R*1.15);const p=new V3(S.P.x+Math.sin(a)*d,0,S.P.z+Math.cos(a)*d);if(pos.some(q=>q.distanceTo(p)<1.9))continue;pos.push(p);}
+  pos.forEach((p,i)=>crearProp(tipos[i%tipos.length],p));
+  if(S.mode==='virtual'&&(eco==='galeria'||S.mis.libre)){crearRiacho();}
+}
+const matAgua=new THREE.MeshStandardMaterial({color:0x3d6f73,roughness:.12,metalness:.15,transparent:true,opacity:.86});
+function crearRiacho(){const a=Math.atan2(S.fwd.x,S.fwd.z)+(Math.random()<.5?1:-1)*rnd(.7,1.1);const d=S.R*.6;const c=new V3(S.P.x+Math.sin(a)*d,0,S.P.z+Math.cos(a)*d);
+  const w=new THREE.Mesh(new THREE.PlaneGeometry(2.6,40),matAgua);w.rotation.x=-Math.PI/2;w.rotation.z=a+Math.PI/2;w.position.copy(c).setY(.015);w.receiveShadow=true;w.renderOrder=5;matAgua.opacity=.93;S.props.add(w);S.agua=c;S.aguaMesh=w;
+  const orilla=new THREE.Mesh(new THREE.PlaneGeometry(3.6,40),M(0x5e4330,1));orilla.rotation.copy(w.rotation);orilla.position.copy(c).setY(.008);S.props.add(orilla);}
+// línea de vista
+function losLibre(pl){const dx=pl.x-S.P.x,dz=pl.z-S.P.z,L=Math.hypot(dx,dz);const n=Math.ceil(L/(CELL*.7));
+  for(let s=1;s<n;s++){const t=s/n;if(t*L<.4||(1-t)*L<.25)continue;const x=S.P.x+dx*t,z=S.P.z+dz*t;const c=S.grid.get(ckey(Math.floor(x/CELL),Math.floor(z/CELL)));if(c&&c.n>=2&&c.hMax>Math.min(.5,ALTO[S.sp]*.7))return false;}return true;}
+const rayV=new THREE.Raycaster();
+function puntoVisibleVirtual(pl){const w=world.localToWorld(pl.clone());const o=camera.position.clone();const dir=w.clone().sub(o);const L=dir.length();rayV.set(o,dir.normalize());rayV.far=L-.1;
+  const h=S.props?rayV.intersectObject(S.props,true):[];return !h.length;}
+function puntosAnimal(){const A=S.animal;const pts=[];const base=A.root.position;const f=new V3(Math.sin(A.root.rotation.y),0,Math.cos(A.root.rotation.y));const ah=ALTO[S.sp];
+  pts.push(base.clone().setY(base.y+ah*.85).addScaledVector(f,ah*.55));pts.push(base.clone().setY(base.y+ah*.55));pts.push(base.clone().setY(base.y+ah*.5).addScaledVector(f,-ah*.5));return pts.filter(p=>p.y>.05);}
+function animalVisible(){if(!S.animal||!S.animal.root.visible)return false;const pts=puntosAnimal();if(!pts.length)return false;
+  if(S.mode==='xr'){if(S.dep)return pts.some(puntoVisibleReal);return losLibre(S.animal.root.position);}
+  return pts.some(puntoVisibleVirtual);}
+
+/* ----- rutas que rodean los obstáculos ----- */
+function ruta(from,to){
+  if(!S.grid.size)return[from,to];
+  const bloq=(i,j)=>{for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)if(ocupada(i+a,j+b))return true;return false;};
+  const si=Math.floor(from.x/CELL),sj=Math.floor(from.z/CELL),ti=Math.floor(to.x/CELL),tj=Math.floor(to.z/CELL);const lim=Math.ceil((S.R*1.8+3)/CELL);
+  const prev=new Map([[ckey(si,sj),null]]);const q=[[si,sj]];let fin=null,qi=0;
+  while(qi<q.length&&qi<60000){const [i,j]=q[qi++];if(Math.abs(i-ti)<=1&&Math.abs(j-tj)<=1){fin=ckey(i,j);break;}
+    for(const [a,b] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const ni=i+a,nj=j+b,k=ckey(ni,nj);if(prev.has(k))continue;if(Math.abs(ni-si)>lim||Math.abs(nj-sj)>lim)continue;
+      if(bloq(ni,nj)&&!(Math.abs(ni-ti)<=2&&Math.abs(nj-tj)<=2)&&!(Math.abs(ni-si)<=1&&Math.abs(nj-sj)<=1))continue;prev.set(k,ckey(i,j));q.push([ni,nj]);}}
+  if(!fin)return[from,to];
+  const cells=[];let k=fin;while(k){const [i,j]=k.split(',').map(Number);cells.push(new V3((i+.5)*CELL,0,(j+.5)*CELL));k=prev.get(k);}cells.reverse();
+  const pts=[from.clone()];for(let i=3;i<cells.length-2;i+=3)pts.push(cells[i]);pts.push(to.clone());return pts;}
+function curvaRuta(from,to){const pts=ruta(from,to);return pts.length>2?new THREE.CatmullRomCurve3(pts,false,'centripetal'):new THREE.LineCurve3(pts[0],pts[1]);}
+
+/* ----- agua real (marcada por el jugador) ----- */
+function salpicar(pos){const s=new THREE.Object3D();s.position.copy(pos);content.add(s);sonar('plaf',s,1,2);
+  for(let i=0;i<3;i++){const r=new THREE.Mesh(new THREE.RingGeometry(.15,.2,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xdff3f5,transparent:true,depthWrite:false}));r.position.copy(pos).setY(.03);content.add(r);setTimeout(()=>tween(1.8,t=>{r.scale.setScalar(1+t*6);r.material.opacity=1-t;},()=>content.remove(r)),i*250);}
+  for(let i=0;i<14;i++){const g=new THREE.Mesh(new THREE.SphereGeometry(.03,6,4),new THREE.MeshBasicMaterial({color:0xcfe9ee,transparent:true}));g.position.copy(pos).setY(.05);const v=new V3(rnd(-1,1),rnd(1.5,3),rnd(-1,1));content.add(g);tween(.9,t=>{g.position.addScaledVector(v,.016);v.y-=.09;g.material.opacity=1-t;},()=>content.remove(g));}}
+function zambullirse(desdeFoto){const A=S.animal;const desde=A.root.position.clone();const dest=S.agua.clone().add(new V3(rnd(-.6,.6),0,rnd(-.6,.6)));
+  A.walk=true;A.speed=1.4;sonar(SP[S.sp].sonido,A.root,.9);
+  tween(1.1,t=>{A.root.position.lerpVectors(desde,dest,t);A.root.position.y=Math.sin(t*Math.PI)*.7-(t>.8?(t-.8)*2:0);A.root.rotation.y=Math.atan2(dest.x-desde.x,dest.z-desde.z);A.body.rotation.x=lerp(-.3,.5,t);},()=>{
+    salpicar(dest);A.body.rotation.x=0;A.walk=false;tween(.8,t=>{A.root.position.y=-.2-t*.9;},()=>{
+      if(desdeFoto){setTimeout(()=>tween(1.4,t=>{A.root.position.y=-1.1+ease(t)*.3;}),2200);return;}
+      S.visto=false;const nuevo=S.agua.clone().add(new V3(rnd(-1.4,1.4),0,rnd(-1.4,1.4)));S.esc={pos:nuevo,tipo:'agua',txt:'metido en el agua'};S.home.copy(nuevo);
+      setTimeout(()=>{A.root.position.set(nuevo.x,-1.1,nuevo.z);tween(1.6,t=>{A.root.position.y=-1.1+ease(t)*.3;});},3500);
+      tip('<b>¡Se tiró al agua!</b> Los tapires nadan muy bien y se esconden bajo el agua para escapar. Mirá el agua con atención: va a asomar la cabeza.');herramientas();});});}
+
 /* =================== CACERÍA =================== */
+function escaneoLugar(){S.phase='room';S.tRoom=0;content.visible=true;env.visible=true;$('#cross').hidden=false;$('#escaneo').hidden=false;$('#radarBox').hidden=true;$('#bListo').disabled=true;$('#tip').classList.add('oculto');barra([]);$('#hPasos').innerHTML='<span class="on">Escaneo</span>';}
+function finEscaneo(){S.obst=clusters();$('#escaneo').hidden=true;setTimeout(()=>{if(S.phase!=='room')tween(1.2,t=>{ptsObj.material.opacity=.85*(1-t);},()=>{ptsObj.visible=false;ptsObj.material.opacity=.85;});},4000);comenzar();}
+$('#bListo').addEventListener('click',e=>{e.stopPropagation();finEscaneo();});
+$('#bMarcar').addEventListener('click',e=>{e.stopPropagation();if(!S.centro){toast('Apuntá el círculo central a la base de un objeto');return;}const dir=S.centro.clone().sub(S.P).setY(0).normalize();const pos=S.centro.clone().setY(0).addScaledVector(dir,.45);
+  S.manual.push({pos,tipo:'detras',dir,txt:'detrás de lo que marcaste'});const f=new THREE.Group();const p=cyl(.01,.01,.35,M(0xF59E0B,.6),5);p.position.y=.17;f.add(p);const b=new THREE.Mesh(new THREE.PlaneGeometry(.12,.08),new THREE.MeshBasicMaterial({color:0xF59E0B,side:THREE.DoubleSide}));b.position.set(.06,.31,0);f.add(b);f.position.copy(S.centro).setY(0);content.add(f);
+  setTimeout(()=>tween(1,t=>f.scale.setScalar(Math.max(.01,1-t)),()=>content.remove(f)),2500);toast('Escondite marcado ('+S.manual.length+')');});
+$('#bAgua').addEventListener('click',e=>{e.stopPropagation();if(!S.centro){toast('Apuntá el círculo central al agua');return;}S.agua=S.centro.clone().setY(0);const r=new THREE.Mesh(new THREE.RingGeometry(.3,.36,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x38BDF8,transparent:true,opacity:.8,depthWrite:false}));r.position.copy(S.agua).setY(.02);content.add(r);setTimeout(()=>tween(1.5,t=>{r.material.opacity=.8*(1-t);},()=>content.remove(r)),3000);toast('Agua marcada: el tapir la va a usar');});
+$('#bAjustes').addEventListener('click',()=>{$('#ajEstado').innerHTML=S.depthOK?'Sensor de profundidad: <b>activo</b>. Los objetos reales tapan al animal.':'Este celular no entregó datos de profundidad. El juego detecta muebles y árboles con puntos de superficie, pero no puede hacer que lo real tape al animal: lo oculta mientras un objeto quede entre vos y él.';panel('pAjustes');});
+$$('[data-ocl]').forEach(b=>b.addEventListener('click',()=>{S.oclModo=b.dataset.ocl;$$('[data-ocl]').forEach(x=>x.classList.toggle('on',x===b));}));
+$('#tDbg').addEventListener('click',()=>{dbgQuad.visible=!dbgQuad.visible;$('#tDbg').classList.toggle('on',dbgQuad.visible);});
+$('#tPts').addEventListener('click',()=>{ptsObj.visible=!ptsObj.visible;$('#tPts').classList.toggle('on',ptsObj.visible);});
 function comenzar(){
   content.visible=true;env.visible=true;$('#cross').hidden=S.mode!=='xr';$('#radarBox').hidden=false;
   if(S.mis.paleo){iniciarPaleo();return;}
@@ -741,33 +943,36 @@ function comenzar(){
 }
 function misSp(){return MIS.find(m=>m.sp===S.sp);}
 function nuevaCaceria(){
-  const m=misSp();S.phase='hunt';S.identified=false;S.encontrado=false;S.rolls=3;S.rollsUsed=0;S.errs=0;S.fotoUrl=null;
-  // escondite
-  const a=rnd(-1.3,1.3),d=S.R*rnd(.7,1);const start=S.P.clone().add(S.fwd.clone().setY(0).normalize().multiplyScalar(.9));
-  const base=Math.atan2(S.fwd.x,S.fwd.z)+a;S.home.set(S.P.x+Math.sin(base)*d,0,S.P.z+Math.cos(base)*d);
+  const m=misSp();S.phase='hunt';S.identified=false;S.encontrado=false;S.visto=false;S.rolls=3;S.rollsUsed=0;S.errs=0;S.fotoUrl=null;S.peek=null;S.tPeek=rnd(3,5);
+  if(S.sp==='tapir'&&S.mode==='virtual'&&!S.agua)crearRiacho();
+  const esc=elegirEscondite();S.esc=esc;S.home.copy(esc.pos).setY(0);
+  const start=S.P.clone().add(S.fwd.clone().setY(0).normalize().multiplyScalar(.9));
   S.prints.forEach(p=>content.remove(p.mesh));S.prints=[];
-  crearRastro(start,S.home.clone(),false);
+  let fin=S.home.clone();if(esc.tipo==='agua'){const d=S.home.clone().sub(start).setY(0);const L=d.length();fin=start.clone().addScaledVector(d.normalize(),Math.max(.5,L-1.4));}
+  crearRastro(start,fin,false,esc.tipo!=='agua');
   if(S.sp==='yagua')crearAlambrado();
   for(let i=0;i<2&&i<S.prints.length;i++)descubrir(S.prints[i],true);
   if(S.animal)content.remove(S.animal.root);
-  const A=animal(S.sp);S.animal=A;A.root.position.copy(S.home);A.root.visible=false;siluetear(A,true);content.add(A.root);S.visible=false;
-  tip((S.mis.libre?'<b>¡Algo anda cerca!</b> ':'')+(S.mis.libre?'':m.intro+' ')+'Seguí las huellas y mirá el <b>radar</b>. '+(S.mode==='xr'?'Caminá con el celular para buscarlo.':'Caminá con el joystick y arrastrá para mirar.'));
+  const A=animal(S.sp);S.animal=A;A.root.position.copy(S.home);siluetear(A,true);content.add(A.root);orientarEscondido();
+  if(esc.tipo==='agua')A.root.position.y=-.8;
+  if(S.depthOK)patchTodo();
+  tip((S.mis.libre?'<b>¡Algo anda cerca!</b> ':m.intro+' ')+'Se escondió en algún lugar. Seguí las huellas y mirá el <b>radar</b>. '+(S.mode==='xr'?'Caminá con el celular: puede estar detrás o debajo de algo.':'Caminá con el joystick y arrastrá para mirar: puede estar detrás de algo.'));
   herramientas();pasosHUD();
 }
-function crearRastro(from,to,visibles){
-  const m=misSp(),sp=S.sp;const dir=to.clone().sub(from);const L=dir.length();dir.normalize();const perp=new V3(dir.z,0,-dir.x);
-  const ancho={tatu:.16,tapir:.2,aguara:.1,yagua:.16}[sp];const paso=Math.min(m.paso,L/3);const n=Math.max(2,Math.floor((L-.35)/paso));
-  const amp=Math.min(.6,L*.12),fase=rnd(0,TAU),idx0=S.prints.length;const nuevos=[];
-  for(let i=0;i<n;i++){const t=(i+1)*paso;const w=Math.sin(t/L*Math.PI*2+fase)*amp*Math.sin(t/L*Math.PI);const dw=Math.cos(t/L*Math.PI*2+fase)*amp*Math.PI*2/L;
-    const side=i%2?1:-1;const c=from.clone().addScaledVector(dir,t).addScaledVector(perp,w+side*ancho/2);
-    const yaw=Math.atan2(dir.x+perp.x*dw,dir.z+perp.z*dw);
+function orientarEscondido(){const A=S.animal,e=S.esc;if(!A||!e)return;const dir=e.dir||A.root.position.clone().sub(S.P).setY(0).normalize();const lado=new V3(dir.z,0,-dir.x).multiplyScalar(Math.random()<.5?1:-1);e.lado=lado;A.root.rotation.y=Math.atan2(lado.x,lado.z);}
+function crearRastro(from,to,visibles,acortar){
+  const m=misSp(),sp=S.sp;const curva=curvaRuta(from,to);const L=curva.getLength();if(L<.3)return curva;
+  const ancho={tatu:.16,tapir:.2,aguara:.1,yagua:.16}[sp];const paso=Math.min(m.paso,L/3);const stop=acortar?Math.max(.4,L-.5):L;const n=Math.max(2,Math.floor((stop-.2)/paso));const nuevos=[];
+  for(let i=0;i<n;i++){const u=Math.min(1,((i+1)*paso)/L);const c=curva.getPointAt(u);const tg=curva.getTangentAt(u).setY(0).normalize();const perp=new V3(tg.z,0,-tg.x);
+    const side=i%2?1:-1;c.addScaledVector(perp,side*ancho/2+Math.sin(i*.9)*.04);const yaw=Math.atan2(tg.x,tg.z);
     nuevos.push({x:c.x,z:c.z,yaw,foot:'del',side});
-    if(m.par){const h=c.clone().addScaledVector(dir,-.15).addScaledVector(perp,side*.03);nuevos.push({x:h.x,z:h.z,yaw,foot:'tra',side});}}
+    if(m.par){const h=c.clone().addScaledVector(tg,-.15).addScaledVector(perp,side*.03);nuevos.push({x:h.x,z:h.z,yaw,foot:'tra',side});}}
   nuevos.forEach(p=>{const P=printSpec(sp,p.foot),D=dims(P);const size=D.box*2.1/100;
     const mat=new THREE.MeshStandardMaterial({map:printTex(sp,p.foot),transparent:true,depthWrite:false,roughness:1,polygonOffset:true,polygonOffsetFactor:-2});
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(size,size),mat);mesh.rotation.set(-Math.PI/2,0,Math.PI+p.yaw);mesh.position.set(p.x,.004,p.z);if(p.side<0)mesh.scale.x=-1;mesh.visible=false;mesh.renderOrder=2;content.add(mesh);
     const pr={mesh,p,P,D,sp,i:S.prints.length,found:false,beyond:false};S.prints.push(pr);if(visibles)descubrir(pr,true);});
-  const tot=S.prints.length;S.prints.forEach((pr,i)=>pr.heat=tot>1?i/(tot-1):1);if(S.thermal)aplicarTermico();
+  const tot=S.prints.length;S.prints.forEach((pr,i)=>pr.heat=tot>1?i/(tot-1):1);if(S.thermal)aplicarTermico();if(S.depthOK)patchTodo();
+  return curva;
 }
 function descubrir(pr,silencio){if(pr.found)return;pr.found=true;pr.mesh.visible=true;pr.mesh.material.opacity=0;tween(.6,t=>{pr.mesh.material.opacity=t;});
   if(!silencio){pulsoChico(pr);const n=S.prints.filter(p=>p.found).length;if(n===3&&!S.identified)tip('<b>Ya tenés varias huellas.</b> Tocá <b>Analizar</b> para identificar quién las dejó. Si no, solo vas a ver su silueta.');}
@@ -791,12 +996,12 @@ function derribar(){if(!S.fence||S.fenceDown)return;S.fenceDown=true;sonar('alam
   tip('<b>¡Corredor biológico abierto!</b> Los parches de monte vuelven a unirse y el yaguareté puede volver a moverse. Seguí el rastro del otro lado.');toast('Alambrado derribado');sumarXP(30,'corredor biológico');herramientas();}
 
 /* ----- silueta tipo «¿quién es?» ----- */
-const matSil=new THREE.MeshBasicMaterial({color:0x07131f,transparent:true,opacity:.93});
+const matSil=new THREE.MeshBasicMaterial({color:0x07131f,fog:false});
 function siluetear(A,on){A.root.traverse(o=>{if(o.isMesh){if(on){if(!o.userData.m0)o.userData.m0=o.material;o.material=matSil;}else if(o.userData.m0)o.material=o.userData.m0;}});}
 
 /* ----- herramientas ----- */
 function herramientas(){
-  if(S.phase==='menu'||S.phase==='scan')return;
+  if(S.phase==='menu'||S.phase==='scan'||S.phase==='room')return;
   if(S.mis.paleo){herramientasPaleo();return;}
   const nF=S.prints.filter(p=>p.found).length;const cercaCerco=S.fence&&!S.fenceDown&&S.P.distanceTo(S.fence.position)<2.6;
   if(S.phase==='captured'){herramientas._k='cap';const s=SP[S.sp],m=misSp();barra([{ico:'sonido',t:'Oír',fn:()=>sonar(s.sonido,S.animal.root,1)},{ico:'accion',t:m.accion,fn:accionEspecial},{ico:'libro',t:'Fauna-dex',dest:true,fn:registrar},S.mis.libre?{ico:'siguiente',t:'Buscar otro',dest:true,fn:()=>{registrar(true);S.sp=Object.keys(SP)[Math.floor(Math.random()*4)];S.libreN++;$('#hTitulo').textContent='Exploración libre · cacería '+S.libreN;armarEntorno();nuevaCaceria();}}:null]);return;}
@@ -807,7 +1012,7 @@ function herramientas(){
   if(S.mode==='cam')items.push({ico:'vista',t:S.gyro?'Giro: sí':'Giro: no',on:S.gyro,fn:()=>{if(S.gyro){S.gyro=false;}else pedirGyro();herramientas();}});
   const key=JSON.stringify(items.map(i=>[i.t,i.dis,i.dest,i.on]));if(key===herramientas._k&&$('#barra').children.length)return;herramientas._k=key;barra(items);
 }
-function fotoLista(){return S.phase==='hunt'&&S.visible&&S.identified&&S._enCuadro;}
+function fotoLista(){return S.phase==='hunt'&&!S.huida&&S.visto&&S.identified&&S._enCuadro;}
 
 /* =================== LUPA =================== */
 const LO={dedos:false,garras:false,relieve:true};
@@ -854,29 +1059,33 @@ function identificado(){S.identified=true;siluetear(S.animal,false);const s=SP[S
 const VEL={tatu:1.1,tapir:.85,aguara:1.4,yagua:1.8};
 let ringPh=0,ringSize=0,TG=96;
 function disparar(){
-  if(!fotoLista()){toast(S.visible?'Encuadralo en el centro de la pantalla':'Todavía no está a la vista');return;}
+  if(!fotoLista()){toast(S.visto?'Encuadralo en el centro de la pantalla, sin que nada lo tape':'Todavía no lo encontraste');return;}
   const ok=Math.abs(ringSize-TG)<16;S.rolls--;S.rollsUsed++;sonar('obturador',camera,.8);
   if(ok){exito();return;}
   if(S.rolls>0){toast('¡Salió movida! Te quedan '+S.rolls+' rollos');saltar(false);}
   else{banner('¡Se escapó!','dejó un rastro nuevo');saltar(true);}
   herramientas();
 }
-function saltar(lejos){const A=S.animal;const desde=A.root.position.clone();
-  let destino;if(lejos){const a=rnd(0,TAU);destino=new V3(S.P.x+Math.sin(a)*S.R*.9,0,S.P.z+Math.cos(a)*S.R*.9);}
-  else{const away=desde.clone().sub(S.P).setY(0).normalize();const a=rnd(-1,1);destino=desde.clone().add(new V3(away.x*Math.cos(a)-away.z*Math.sin(a),0,away.x*Math.sin(a)+away.z*Math.cos(a)).multiplyScalar(rnd(1.4,2.4)));}
-  S.huida={desde,destino,t:0,dur:lejos?1.4:1.6,lejos};A.walk=true;A.speed=1.6;sonar(SP[S.sp].sonido,A.root,.9);
-  crearRastro(desde,destino,!lejos);
+function saltar(lejos){const A=S.animal;const desde=A.root.position.clone().setY(0);S.peek=null;
+  if(S.sp==='tapir'&&S.agua&&(lejos||Math.random()<.5)){zambullirse(false);return;}
+  let destino=null;const cand=escondites(S.sp).filter(e=>e.pos.distanceTo(desde)>.9&&!(S.esc&&e.pos.distanceTo(S.esc.pos)<.5));
+  if(cand.length){const ord=cand.sort((a,b)=>lejos?b.pos.distanceTo(S.P)-a.pos.distanceTo(S.P):a.pos.distanceTo(desde)-b.pos.distanceTo(desde));const e=ord[Math.floor(Math.random()*Math.min(2,ord.length))];S.esc=e;destino=e.pos.clone();}
+  else{const away=desde.clone().sub(S.P).setY(0).normalize();const a=rnd(-1,1);const dist=lejos?S.R*.8:rnd(1.4,2.4);destino=desde.clone().add(new V3(away.x*Math.cos(a)-away.z*Math.sin(a),0,away.x*Math.sin(a)+away.z*Math.cos(a)).multiplyScalar(dist));S.esc={pos:destino.clone(),tipo:'libre',txt:'por ahí'};}
+  const curva=crearRastro(desde,destino,!lejos,false);
+  S.huida={curva,desde,destino,t:0,dur:clamp(curva.getLength()/2.2,.8,3),lejos};A.walk=true;A.speed=1.6;sonar(SP[S.sp].sonido,A.root,.9);
 }
-function finHuida(){const h=S.huida,A=S.animal;S.huida=null;A.walk=false;A.speed=1;S.home.copy(h.destino);A.root.position.copy(h.destino);
-  if(h.lejos){A.root.visible=false;S.visible=false;S.rolls=3;tip('<b>Se fue al monte.</b> Pero dejó huellas nuevas: buscalas con el radar. Tenés 3 rollos otra vez.');}
-  herramientas();}
+function finHuida(){const h=S.huida,A=S.animal;S.huida=null;A.walk=false;A.speed=1;S.home.copy(h.destino);A.root.position.copy(h.destino);S.visto=false;A.root.visible=true;orientarEscondido();S.tPeek=rnd(4,6);
+  if(h.lejos){S.rolls=3;tip('<b>Se escapó y se volvió a esconder '+(S.esc.txt||'')+'.</b> Dejó huellas nuevas: buscalas con el radar. Tenés 3 rollos otra vez.');}
+  else tip('<b>¡Se movió!</b> Se fue a esconder de nuevo. Buscalo cerca.');
+  herramientas();pasosHUD();}
 function exito(){
   S.phase='captured';$('#captura').hidden=true;const fl=$('#flash');fl.style.transition='none';fl.style.opacity=1;requestAnimationFrame(()=>{fl.style.transition='opacity .6s';fl.style.opacity=0;});
   S.snap=true;const A=S.animal;if(A.lab)A.lab.visible=true;pulso(A.root.position.clone());setTimeout(()=>sonar('ping',A.root,.9),300);setTimeout(()=>sonar(SP[S.sp].sonido,A.root,1),1100);
   const est=Math.max(1,4-S.rollsUsed-(S.errs>2?1:0));S.estrellas=Math.min(3,est);
   banner('¡Foto de campo!','★'.repeat(S.estrellas)+'☆'.repeat(3-S.estrellas));sumarXP(80+S.estrellas*20,SP[S.sp].nombre);
   tip('<b>¡Lo registraste!</b> '+SP[S.sp].ense+' Probá su acción especial o guardalo en tu Fauna-dex.');
-  if(S.sp==='tapir'){S.special={tipo:'tapir',centro:A.root.position.clone(),ang:0,tB:0,brotes:0};for(let i=0;i<14;i++){const v=vaina();const a=rnd(0,TAU),r=rnd(.4,1.4);v.position.set(A.root.position.x+Math.cos(a)*r,.01,A.root.position.z+Math.sin(a)*r);content.add(v);}A.walk=true;}
+  if(S.sp==='tapir'&&S.esc&&S.esc.tipo==='agua'){S.special={tipo:'agua'};}
+  else if(S.sp==='tapir'){S.special={tipo:'tapir',centro:A.root.position.clone(),ang:0,tB:0,brotes:0};for(let i=0;i<14;i++){const v=vaina();const a=rnd(0,TAU),r=rnd(.4,1.4);v.position.set(A.root.position.x+Math.cos(a)*r,.01,A.root.position.z+Math.sin(a)*r);content.add(v);}A.walk=true;}
   if(S.sp==='aguara'){const c=A.root.position.clone();S.special={tipo:'aguara',centro:c,ang:0};for(let i=0;i<40;i++){const g=pasto(rnd(.6,.95));const a=rnd(0,TAU),r=rnd(.5,1.8);g.position.set(c.x+Math.cos(a)*r,0,c.z+Math.sin(a)*r);g.scale.setScalar(.01);content.add(g);setTimeout(()=>tween(1,t=>g.scale.setScalar(Math.max(.01,t))),i*30);}}
   herramientas._k=null;herramientas();pasosHUD();
 }
@@ -888,7 +1097,7 @@ function tomarFoto(){try{const cv=renderer.domElement;const W=480,H=Math.round(W
 function accionEspecial(){const A=S.animal,sp=S.sp;if(!A)return;
   if(sp==='tatu'){if(S.cavando)return;S.cavando=true;sonar('excava',A.root,1);const fw=new V3(Math.sin(A.root.rotation.y),0,Math.cos(A.root.rotation.y));const mont=el(.35,.18,.35,M(0x7a5a3c,1));mont.position.copy(A.root.position).addScaledVector(fw,.55);mont.scale.set(.01,.01,.01);content.add(mont);
     tween(3.2,t=>{const e=ease(Math.min(1,t*1.3));A.body.rotation.x=e*.5;A.root.position.y=-e*.42;mont.scale.set(.35*e+.01,.2*e+.01,.35*e+.01);},()=>{tip('<b>Así cava su madriguera.</b> Esa cueva después la usan otras especies del monte como refugio.');setTimeout(()=>tween(1.6,t=>{A.body.rotation.x=.5*(1-t);A.root.position.y=-.42*(1-ease(t));},()=>{S.cavando=false;}),2200);});}
-  else if(sp==='tapir'){A.walk=!A.walk;}
+  else if(sp==='tapir'){if(S.agua){A.root.position.y=Math.max(A.root.position.y,-.3);zambullirse(true);tip('<b>¡Zambullida!</b> El tapir es un gran nadador: se mete al agua para refrescarse y para escapar.');}else A.walk=!A.walk;}
   else if(sp==='aguara'){A.walk=!A.walk;if(A.walk)tip('Mirá cómo sus patas largas lo dejan ver por encima del pastizal.');}
   else if(sp==='yagua'){sonar('rugido',A.root,1);A.head.rotation.x=-.25;setTimeout(()=>A.head.rotation.x=0,2500);}
 }
@@ -918,7 +1127,7 @@ function fosilTex(id){return canvasTex(1024,1024,(x,w,h)=>{
 });}
 
 function iniciarPaleo(){S.phase='detect';const fwd0=Math.atan2(S.fwd.x,S.fwd.z);
-  S.fossils=PALEO_ORDEN.map((id,i)=>{let p,ok=false,k=0;while(!ok&&k<40){k++;const a=fwd0+rnd(-1.6,1.6),d=S.R*rnd(.4,1);p=new V3(S.P.x+Math.sin(a)*d,0,S.P.z+Math.cos(a)*d);ok=true;}return{id,pos:p,dug:false,done:false};});
+  S.fossils=PALEO_ORDEN.map((id,i)=>{let p,ok=false,k=0;while(!ok&&k<40){k++;const a=fwd0+rnd(-1.6,1.6),d=S.R*rnd(.4,1);p=new V3(S.P.x+Math.sin(a)*d,0,S.P.z+Math.cos(a)*d);ok=true;const ci=Math.floor(p.x/CELL),cj=Math.floor(p.z/CELL);for(let x=-5;x<=5&&ok;x++)for(let z=-5;z<=5;z++)if(ocupada(ci+x,cj+z)){ok=false;break;}}return{id,pos:p,dug:false,done:false};});
   // separarlos un poco
   for(let it=0;it<20;it++)for(const a of S.fossils)for(const b of S.fossils)if(a!==b&&a.pos.distanceTo(b.pos)<1.8){const d=a.pos.clone().sub(b.pos).setY(0).normalize().multiplyScalar(.2);a.pos.add(d);}
   S.fossils.forEach(f=>{const m=new THREE.Mesh(new THREE.CircleGeometry(.5,24),new THREE.MeshBasicMaterial({color:0x9a7650,transparent:true,opacity:.0,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.copy(f.pos).setY(.003);content.add(m);f.marca=m;});
@@ -930,7 +1139,7 @@ function abrirSitio(f){S.phase='dig';f.dug=true;const cz=f.pos;const objs=[];
   for(let i=0;i<N;i++)for(let j=0;j<N;j++){const b=new THREE.Mesh(new THREE.BoxGeometry(t*.98,.05,t*.98),M(colores[(i*3+j*7)%4],1));b.position.set(cz.x-.6+t*(i+.5),.025,cz.z-.6+t*(j+.5));b.castShadow=true;b.receiveShadow=true;b.userData.hp=3;b.scale.y=.01;content.add(b);tiles.push(b);objs.push(b);const d=(i+j)*30;setTimeout(()=>tween(.4,u=>{b.scale.y=Math.max(.01,u);}),d);}
   const est=M(0xd8c39a,.8);[[-.65,-.65],[.65,-.65],[.65,.65],[-.65,.65]].forEach(([x,z])=>{const e=cyl(.012,.012,.22,est,6);e.position.set(cz.x+x,.11,cz.z+z);content.add(e);objs.push(e);});
   const cord=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new V3(cz.x-.65,.2,cz.z-.65),new V3(cz.x+.65,.2,cz.z-.65),new V3(cz.x+.65,.2,cz.z+.65),new V3(cz.x-.65,.2,cz.z+.65)]),new THREE.LineBasicMaterial({color:0xF59E0B}));content.add(cord);objs.push(cord);
-  S.dig={id:f.id,f,tiles,objs,c:cz.clone(),expuesto:false,limpias:0};S.tool='brush';sonar('ping',camera,.6);
+  S.dig={id:f.id,f,tiles,objs,c:cz.clone(),expuesto:false,limpias:0};if(S.depthOK)patchTodo();S.tool='brush';sonar('ping',camera,.6);
   banner('¡Señal fuerte!','excavá acá');tip('<b>Encontraste un yacimiento.</b> '+(S.mode==='xr'?'Apuntá a la cuadrícula y mantené apretado para barrer con el pincel.':'Arrastrá el dedo o el mouse sobre la cuadrícula para barrer el sedimento.'));herramientasPaleo();}
 function herramientasPaleo(){const d=S.dig;let items;
   if(S.phase==='detect')items=[{ico:'id',t:'Fósiles '+S.fossils.filter(f=>f.done).length+'/4',dis:true,fn:()=>{}}];
@@ -1015,7 +1224,8 @@ function accion(){
 }
 function onXRSelect(){
   if(S.phase==='scan'){if(!reticle.visible)return;const p=new V3().setFromMatrixPosition(reticle.matrix);const c=renderer.xr.getCamera();const cp=new V3().setFromMatrixPosition(c.matrixWorld);
-    world.position.copy(p);world.rotation.set(0,Math.atan2(p.x-cp.x,p.z-cp.z),0);reticle.visible=false;S.placed=true;actualizarJugadorXR();comenzar();return;}
+    world.position.copy(p);world.rotation.set(0,Math.atan2(p.x-cp.x,p.z-cp.z),0);reticle.visible=false;S.placed=true;actualizarJugadorXR();escaneoLugar();return;}
+  if(S.phase==='room')return;
   rayoCentroXR();accion();
 }
 const cv=renderer.domElement;const punteros=new Map();let arr=null;
@@ -1047,12 +1257,13 @@ function dibujarRadar(t){
   S.prints.forEach(pr=>{if(!pr.found)return;const [x,y]=map(pr.p.x,pr.p.z);rx.fillStyle=S.thermal?heatColor(pr.heat):'#c79a6b';rx.beginPath();rx.arc(x,y,4,0,TAU);rx.fill();});
   if(S.fence&&!S.fenceDown){const [x,y]=map(S.fence.position.x,S.fence.position.z);rx.strokeStyle='#cbd5e1';rx.lineWidth=4;rx.beginPath();rx.moveTo(x-10,y);rx.lineTo(x+10,y);rx.stroke();}
   if(S.mis&&S.mis.paleo){S.fossils.forEach(f=>{if(!f.done&&!f.dug)return;const [x,y]=map(f.pos.x,f.pos.z);rx.fillStyle=f.done?'#4ade80':'#F59E0B';rx.fillRect(x-6,y-6,12,12);});}
-  else if(S.animal&&(S.identified||S.visible)){const p=S.animal.root.position;const [x,y]=map(p.x,p.z);const pu=6+Math.sin(t/200)*2;rx.fillStyle=S.identified?'#F59E0B':'#0b1622';rx.strokeStyle='#fff';rx.lineWidth=2;rx.beginPath();rx.arc(x,y,pu+2,0,TAU);rx.fill();rx.stroke();}
+  else if(S.animal&&(S.visto||S.phase==='captured')){const p=S.animal.root.position;const [x,y]=map(p.x,p.z);const pu=6+Math.sin(t/200)*2;rx.fillStyle=S.identified?'#F59E0B':'#0b1622';rx.strokeStyle='#fff';rx.lineWidth=2;rx.beginPath();rx.arc(x,y,pu+2,0,TAU);rx.fill();rx.stroke();}
+  else if(S.animal&&S.identified&&S.esc){if(!S.esc.zona)S.esc.zona=S.esc.pos.clone().add(new V3(rnd(-.8,.8),0,rnd(-.8,.8)));const [x,y]=map(S.esc.zona.x,S.esc.zona.z);rx.fillStyle='rgba(245,158,11,'+(.18+.1*Math.sin(t/300))+')';rx.beginPath();rx.arc(x,y,1.4*esc,0,TAU);rx.fill();}
   rx.restore();
   // flecha al objetivo
   let obj=null;
   if(S.mis&&S.mis.paleo){const c=fosilCercano();if(c&&S.phase==='detect')obj=c.f.pos;}
-  else if(S.phase==='hunt'){const sig=S.prints.find(p=>!p.found&&!(p.beyond&&!S.fenceDown));obj=sig?new V3(sig.p.x,0,sig.p.z):(S.fence&&!S.fenceDown?S.fence.position:S.home);}
+  else if(S.phase==='hunt'){const sig=S.prints.find(p=>!p.found&&!(p.beyond&&!S.fenceDown));obj=sig?new V3(sig.p.x,0,sig.p.z):(S.fence&&!S.fenceDown?S.fence.position:(S.esc&&S.esc.zona)||S.home);}
   if(obj){const [x,y]=map(obj.x,obj.z);const a=Math.atan2(y-C,x-C);const dd=Math.hypot(x-C,y-C);const rr=Math.min(R-6,Math.max(24,dd));const ax=C+Math.cos(a)*rr,ay=C+Math.sin(a)*rr;rx.save();rx.translate(ax,ay);rx.rotate(a+Math.PI/2);rx.fillStyle='#38BDF8';rx.beginPath();rx.moveTo(0,-11);rx.lineTo(8,7);rx.lineTo(0,3);rx.lineTo(-8,7);rx.closePath();rx.fill();rx.restore();}
   // jugador
   rx.fillStyle='#f2e9dc';rx.beginPath();rx.moveTo(C,C-12);rx.lineTo(C+8,C+8);rx.lineTo(C,C+4);rx.lineTo(C-8,C+8);rx.closePath();rx.fill();
@@ -1060,7 +1271,7 @@ function dibujarRadar(t){
 function senal(){let d=null,txt='';
   if(S.mis.paleo){const c=fosilCercano();if(!c||S.phase!=='detect'){$('#senalTxt').textContent=S.phase==='detect'?'—':'Yacimiento';$('#senalHs').innerHTML='';return;}d=c.d;}
   else{if(!S.animal)return;d=Math.hypot(S.animal.root.position.x-S.P.x,S.animal.root.position.z-S.P.z);}
-  const n=d<revelDist()?1:d<S.R*.6?2:3;txt=S.phase==='captured'?'¡Registrado!':n===1?'¡Muy cerca!':n===2?'Cerca':'Lejos';
+  const n=d<2.5?1:d<S.R*.6?2:3;txt=S.phase==='captured'?'¡Registrado!':n===1?'¡Muy cerca!':n===2?'Cerca':'Lejos';
   if(S._senN!==n||S._senT!==txt){S._senN=n;S._senT=txt;$('#senalTxt').textContent=txt;$('#senalHs').innerHTML=S.phase==='captured'?'':HSVG.repeat(n);}
   return d;}
 function revelDist(){return clamp(S.R*.5,1.8,4.5);}
@@ -1079,12 +1290,19 @@ function moverJugador(dt){let mx=S.joy.x,my=S.joy.y;const k=S.keys;if(k['w']||k[
 renderer.setAnimationLoop((time,frame)=>{
   const dt=Math.min(reloj.getDelta(),.05);
   for(let i=ANIMS.length-1;i>=0;i--){const a=ANIMS[i];a.t+=dt;const k=Math.min(1,a.t/a.dur);try{a.fn(k);}catch(e){}if(k>=1){ANIMS.splice(i,1);if(a.done)a.done();}}
-  const jugando=S.phase!=='menu'&&S.phase!=='scan';
+  const jugando=S.phase!=='menu'&&S.phase!=='scan'&&S.phase!=='room';
   if(frame&&S.mode==='xr'){
     const ref=renderer.xr.getReferenceSpace();
     if(S.phase==='scan'&&hitSrc){const r=frame.getHitTestResults(hitSrc);if(r.length){const pose=r[0].getPose(ref);reticle.visible=true;reticle.matrix.fromArray(pose.transform.matrix);if(!S._vioRet){S._vioRet=1;tip('<b>¡Suelo detectado!</b> Tocá la pantalla para armar el campamento.',0);}}else reticle.visible=false;}
     if(lightProbe){try{const le=frame.getLightEstimate(lightProbe);if(le){const d=le.primaryLightDirection,I=le.primaryLightIntensity;const m=Math.max(I.x,I.y,I.z);sun.intensity=clamp(m,.2,3);hemi.intensity=clamp(.35+m*.25,.3,1.2);if(d)sun.position.set(d.x*6,Math.max(1,d.y*6),d.z*6).add(world.position);}}catch(e){}}
-    if(jugando)actualizarJugadorXR();
+    if(S.depthOK)actualizarProfundidad(frame,ref);
+    if(S.placed&&S.phase!=='scan'&&S.phase!=='menu'){actualizarJugadorXR();
+      if(hitSrc){const r=frame.getHitTestResults(hitSrc);if(r.length){const tp=r[0].getPose(ref).transform.position;S.centro=world.worldToLocal(new V3(tp.x,tp.y,tp.z));}else S.centro=null;}
+      S._fr=(S._fr||0)+1;if(S.phase==='room'||S._fr%6===0)escanear(frame,ref);
+      if(S._fr%30===0&&S.depthOK)patchTodo();}
+    if(S.phase==='room'){S.tRoom+=dt;if(S._fr%15===0){const cs=clusters().filter(o=>o.tipo!=='pared');$('#escProg').style.width=Math.min(100,S.tRoom/10*100)+'%';
+      $('#escEstado').innerHTML=(S.depthOK?'Profundidad: <b>activa</b>':'Profundidad: <b class="no">no disponible</b>')+' · Encontré: '+describirLugar(clusters())+(S.manual.length?' · '+S.manual.length+' marcado'+(S.manual.length>1?'s':''):'')+(S.agua?' · agua':'');
+      $('#bListo').disabled=S.tRoom<4;$('#bListo').textContent=(cs.length||S.manual.length)?'¡Listo, a buscar!':'Seguir sin objetos';}}
     if(S.dig&&S.phase==='dig'&&S.xrHold&&time-(S._brT||0)>120){S._brT=time;rayoCentroXR();const h=ray.intersectObjects(tiles(),false);if(h.length)cepillar(h[0].object);}
   }else if(jugando){moverJugador(dt);
     if(S.mode==='cam'&&time-tLuz>1000){tLuz=time;try{const v=$('#cam');if(v.videoWidth){lx.drawImage(v,0,0,16,12);const px=lx.getImageData(0,0,16,12).data;let L=0;for(let i=0;i<px.length;i+=4)L+=px[i]*.3+px[i+1]*.59+px[i+2]*.11;L/=px.length/4*255;hemi.intensity=lerp(hemi.intensity,.4+L*1.1,.5);sun.intensity=lerp(sun.intensity,.5+L*1.4,.5);}}catch(e){}}
@@ -1103,18 +1321,29 @@ function logica(dt,time){
   const A=S.animal;
   if(!S.mis.paleo&&A){
     const d=Math.hypot(A.root.position.x-S.P.x,A.root.position.z-S.P.z);
-    if(S.huida){const h=S.huida;h.t+=dt;const k=Math.min(1,h.t/h.dur);A.root.position.lerpVectors(h.desde,h.destino,k);A.root.rotation.y=Math.atan2(h.destino.x-h.desde.x,h.destino.z-h.desde.z);if(h.lejos&&k>.6)A.root.visible=false;if(k>=1)finHuida();}
+    if(S.huida){const h=S.huida;h.t+=dt;const k=Math.min(1,h.t/h.dur);const p=h.curva.getPointAt(k);A.root.position.set(p.x,0,p.z);const tg=h.curva.getTangentAt(k);A.root.rotation.y=Math.atan2(tg.x,tg.z);if(k>=1)finHuida();}
     else if(S.phase==='hunt'){
       const bloqueado=S.fence&&!S.fenceDown;
-      if(!S.visible&&!bloqueado&&d<revelDist()){S.visible=true;A.root.visible=true;A.root.scale.setScalar(.01);tween(.8,t=>A.root.scale.setScalar(Math.max(.01,ease(t))));S.encontrado=true;pasosHUD();sonar(SP[S.sp].sonido,A.root,1);
-        if(S.identified)banner('¡Apareció un '+SP[S.sp].nombre.toLowerCase()+'!','encuadralo y sacá la foto');else{banner('¡Una silueta!','¿quién será?');tip('<b>¡Ahí está!</b> Pero no sabés quién es. Analizá sus huellas para acercarte sin espantarlo.');}}
-      if(S.visible){const ang=Math.atan2(S.P.x-A.root.position.x,S.P.z-A.root.position.z);let dy=ang-A.root.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));A.root.rotation.y+=dy*Math.min(1,dt*1.5);
+      // sin sensor de profundidad en RA: se oculta mientras haya un objeto real en el medio
+      if(S.mode==='xr'&&!S.depthOK)A.root.visible=S.visto||losLibre(A.root.position);
+      const ve=!bloqueado&&d<7&&animalVisible();
+      const pr=world.localToWorld(A.root.position.clone().setY(A.root.position.y+ALTO[S.sp]*.6)).project(renderer.xr.isPresenting?renderer.xr.getCamera():camera);
+      const enPantalla=pr.z<1&&Math.abs(pr.x)<.85&&Math.abs(pr.y)<.85;
+      if(!S.visto&&ve&&enPantalla){S.visto=true;S.encontrado=true;S.peek=null;pasosHUD();sonar(SP[S.sp].sonido,A.root,1);
+        const donde=S.esc?S.esc.txt:'';if(S.identified)banner('¡Ahí está!',donde);else{banner('¡Una silueta!',donde);tip('<b>¡Lo encontraste '+donde+'!</b> Pero no sabés quién es. Analizá sus huellas para acercarte sin espantarlo.');}}
+      // se asoma de su escondite de vez en cuando
+      if(!S.visto&&!S.peek&&S.esc){S.tPeek-=dt;if(S.tPeek<=0){S.peek={t:0,base:A.root.position.clone()};sonar(SP[S.sp].sonido,A.root,.7,1.5);}}
+      if(S.peek){const P=S.peek;P.t+=dt;const k=Math.min(1,P.t/2.8);const s=Math.sin(k*Math.PI);
+        if(S.esc.tipo==='agua')A.root.position.y=P.base.y+s*.35;
+        else if(S.esc.tipo==='debajo')A.head.rotation.y=s*.7;
+        else{const amt=(S.esc.o?S.esc.o.r*.7:.3)+.2;A.root.position.copy(P.base).addScaledVector(S.esc.lado||new V3(1,0,0),s*amt);A.walk=k<.25||(k>.75&&k<1);}
+        if(k>=1){A.root.position.copy(P.base);A.walk=false;S.peek=null;S.tPeek=rnd(5,9);}}
+      if(S.visto){const ang=Math.atan2(S.P.x-A.root.position.x,S.P.z-A.root.position.z);let dy=ang-A.root.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));A.root.rotation.y+=dy*Math.min(1,dt*1.5);
         if(!S.identified&&d<1.3&&!S._espanto){S._espanto=true;tip('<b>¡Se espantó!</b> Sin saber quién es te acercaste demasiado. Analizá las huellas.');saltar(false);setTimeout(()=>S._espanto=false,3000);}}
       // llamado espacial
-      S.tLlamado-=dt;if(S.tLlamado<=0){S.tLlamado=rnd(6,10);sonar(SP[S.sp].sonido,A.root,S.visible?1:.8,1.5);}
-      // encuadre
-      const p=A.root.position.clone();p.y+=.4;const w=world.localToWorld(p);const pr=w.clone().project(renderer.xr.isPresenting?renderer.xr.getCamera():camera);
-      const enCuadro=S.visible&&pr.z<1&&Math.abs(pr.x)<.55&&Math.abs(pr.y)<.6&&d<revelDist()+1;
+      S.tLlamado-=dt;if(S.tLlamado<=0){S.tLlamado=rnd(6,10);sonar(SP[S.sp].sonido,A.root,S.visto?1:.8,1.5);}
+      // encuadre para la foto
+      const enCuadro=S.visto&&ve&&pr.z<1&&Math.abs(pr.x)<.55&&Math.abs(pr.y)<.6&&d<5.5;
       if(enCuadro!==S._enCuadro){S._enCuadro=enCuadro;herramientas();}
       const cap=$('#captura');if(enCuadro&&S.identified){cap.hidden=false;const sx=(pr.x+1)/2*innerWidth,sy=(1-pr.y)/2*innerHeight;ringPh+=dt*VEL[S.sp]*TAU*.5;ringSize=TG+Math.sin(ringPh)*70+30;
         cap.style.transform=`translate(${sx}px,${sy}px)`;cap.children[0].style.width=cap.children[0].style.height=TG+'px';cap.children[1].style.width=cap.children[1].style.height=Math.max(20,ringSize)+'px';cap.classList.toggle('ok',Math.abs(ringSize-TG)<16);}
@@ -1129,7 +1358,7 @@ function logica(dt,time){
 }
 
 pintarMenu();
-window.__rhf={S,iniciar,elegirMision,cepillar};
+window.__rhf={S,iniciar,elegirMision,cepillar};window.THREE=THREE;
 })();
 </script>
 

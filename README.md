@@ -16,14 +16,15 @@ Un juego de cacería en realidad aumentada, al estilo Pokémon GO: el animal se 
 ## Cómo se juega
 
 1. Elegí la zona: casa (3 m), patio (7 m) o plaza (14 m).
-2. Seguí las huellas con el radar: aparecen cuando pasás cerca.
-3. Analizá las huellas (tamaño, dedos, garras). Sin identificarlo, solo ves su silueta.
-4. Sacale la foto cuando el aro se ponga verde. Tenés 3 rollos; si fallás, se escapa y deja un rastro nuevo.
+2. **Escaneá el lugar:** apuntá a muebles, mesas, árboles y rincones. El animal se esconde detrás o debajo de esos objetos reales, y gracias al sensor de profundidad lo real lo tapa en la cámara. Podés marcar un escondite («Esconder acá») o un río o pileta («Hay agua acá»): el tapir se mete al agua y se zambulle.
+3. Seguí las huellas con el radar: aparecen cuando pasás cerca.
+4. Analizá las huellas (tamaño, dedos, garras). Sin identificarlo, solo ves su silueta.
+5. Sacale la foto cuando el aro se ponga verde. Tenés 3 rollos; si fallás, se escapa y deja un rastro nuevo.
 
 ## Equipos
 
-- **RA completa** (detección del suelo y rastro que se sigue caminando): Android con Chrome y ARCore.
-- **Modo cámara con giroscopio:** iPhone y otros equipos.
+- **RA completa con oclusión** (el animal se esconde detrás de los objetos reales): Android con Chrome, ARCore y soporte de profundidad (ARCore Depth API). Sin profundidad igual detecta objetos y esconde al animal, pero no puede recortarlo detrás de ellos.
+- **Modo cámara con giroscopio:** iPhone y otros equipos. Safari no da acceso a la geometría del lugar, así que el animal se esconde detrás de objetos virtuales.
 - **Modo sin cámara:** computadora o proyector del aula.
 
 La cámara solo funciona si la página se abre con https (por ejemplo, desde GitHub Pages).
